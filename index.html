@@ -6,7 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
-
+  
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script src="myTrackjs.js"> //I am not putting my token here AHA</script>
   <style>
     button {
       margin: 3px;
@@ -69,25 +71,45 @@
     </form>
 
     <section id="error-btns">
-      <button>Console Log</button>
-      <button>Console Error</button>
-      <button>Console Count</button>
-      <button>Console Warn</button>
-      <button>Console Assert</button>
-      <button>Console Clear</button>
-      <button>Console Dir</button>
-      <button>Console dirxml</button>
-      <button>Console Group Start</button>
-      <button>Console Group End</button>
-      <button>Console Table</button>
-      <button>Start Timer</button>
-      <button>End Timer</button>
-      <button>Console Trace</button>
-      <button>Trigger a Global Error</button>
+      <button id="log-btn">Console Log</button>
+      <button id="err-btn">Console Error</button>
+      <button id="count-btn">Console Count</button>
+      <button id="warn-btn">Console Warn</button>
+      <button id="assert-btn">Console Assert</button>
+      <button id="clear-btn">Console Clear</button>
+      <button id="dir-btn">Console Dir</button>
+      <button id="dirx-btn">Console dirxml</button>
+      <button id="gp-st-btn">Console Group Start</button>
+      <button id="gp-ed-btn">Console Group End</button>
+      <button id="table-btn">Console Table</button>
+      <button id="timer-st-btn">Start Timer</button>
+      <button id="timer-ed-btn">End Timer</button>
+      <button id="trace-btn">Console Trace</button>
+      <button id="global-btn">Trigger a Global Error</button>
     </section>
   </main>
 
   <script>
+    // Part 1-4:
+    class DivideByZeroError extends Error{
+      constructor(message){
+        super(message);
+        this.name = "Divide By Zero";
+      }
+    };
+    class ValidationError extends Error{
+      constructor(message){
+        super(message);
+        this.name = "Invalid Input";
+      }
+    };
+
+    class EmptyInputError extends Error{
+      constructor(message){
+        super(message);
+        this.name = "Empty Input";
+      }
+    };
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,14 +117,129 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      try{
+        if(firstNum == "" || secondNum == ""){
+          throw new EmptyInputError();
+        }
+        
+        if(isNaN(firstNum)|| isNaN(secondNum)){
+          throw new ValidationError(firstNum + " is not a valid Input");
+        }
+        firstNum = Number(firstNum);
+        secondNum = Number(secondNum);
+
+        if(secondNum == 0 && operator == "/"){
+          throw new DivideByZeroError("Cannot divided by zeor");
+        }
+        let result = Number(eval(`${firstNum} ${operator} ${secondNum}`));
+        output.innerHTML =  result;
+      }
+      catch(err){
+        output.innerHTML = String(err);
+        alert("Error occured!");
+      }
+      finally{
+        //Reset
+        document.querySelector('#first-num').value = "";
+        document.querySelector('#second-num').value = "";
+        document.querySelector('#operator').value = "+";
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+    const log_btn       = errorBtns.find(btn=> btn.id=="log-btn");
+    const err_btn       = errorBtns.find(btn=> btn.id =="err-btn" );
+    const count_btn     = errorBtns.find(btn=> btn.id =="count-btn" );
+    const warn_btn      = errorBtns.find(btn=> btn.id =="warn-btn" );
+    const assert_btn    = errorBtns.find(btn=> btn.id =="assert-btn" );
+    const clear_btn     = errorBtns.find(btn=> btn.id =="clear-btn" );
+    const dir_btn       = errorBtns.find(btn=> btn.id =="dir-btn" );
+    const dirx_btn      = errorBtns.find(btn=> btn.id =="dirx-btn" );
+    const gp_st_btn     = errorBtns.find(btn=> btn.id =="gp-st-btn"); 
+    const gp_ed_btn     = errorBtns.find(btn=> btn.id =="gp-ed-btn"); 
+    const table_btn     = errorBtns.find(btn=> btn.id =="table-btn");
+    const timer_st_btn  = errorBtns.find(btn=> btn.id =="timer-st-btn");
+    const timer_ed_btn  = errorBtns.find(btn=> btn.id =="timer-ed-btn");
+    const trace_btn     = errorBtns.find(btn=> btn.id =="trace-btn");
+
+    log_btn.addEventListener("click",()=>console.log("Console Log Demo"));
+    err_btn.addEventListener("click",()=>console.error("Console Error Demo"));
+    warn_btn.addEventListener("click", ()=>console.warn("This is a warning"));
+    table_btn.addEventListener("click",()=>console.table(["Console","Table","Demo"]));
+    dir_btn.addEventListener("click",()=>console.dir([1,2,errorBtns]));
+    dirx_btn.addEventListener("click",()=>console.dirxml([1,2,errorBtns]));
+   
+    function createCounter() {
+      let count = 0; // This variable is "closed over" — private to the closure
+
+      return {
+        increment: function () {
+          count++;
+          return count;
+        },
+        peek : function(){
+          return count;
+        }
+      };
+    } 
+    let counter = createCounter(); 
+    count_btn.addEventListener("click",()=>console.log("Counter: " + counter.increment()));
+    clear_btn.addEventListener("click",()=>{
+      counter = createCounter();
+      console.clear()
+    });
+    assert_btn.addEventListener("click",()=>console.assert(counter.peek() > 5, "I AM NOT TRUE UNTIL COUNTER GREATER THAN 5"));
+    let gp_counter = 1; 
+    let gp_en = 1;
+    gp_st_btn.addEventListener("click",()=>{
+      if(gp_en == 1){
+        console.group(`grounp ${gp_counter}`);
+        gp_en = 0;
+      }
+    });
+    gp_ed_btn.addEventListener("click",()=>{
+      if(gp_en == 0){
+        gp_counter +=1;
+        gp_en = 1;
+        console.groupEnd();
+      }
+    });
+
+    timer_st_btn.addEventListener("click",()=>{
+      console.time();
+      console.timeLog();
+      trace_btn.addEventListener("click",()=>console.trace());
+    });
+    timer_ed_btn.addEventListener("click",()=>{
+      console.timeLog();
+      console.timeEnd();
+    });
+    trace_btn.addEventListener("click",function This_is_trace_btn(){console.trace()});
+    
+    // Part5
+    const global_btn = errorBtns.find(btn => btn.id == "global-btn");
+    global_btn.addEventListener("click", ()=>{
+      aboom("THIS IS BAD");
+    });
+
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.log("Global Error Caught:");
+      console.log("Message:", message);
+      console.log("Source:", source);
+      console.log("Line:", lineno, "Column:", colno);
+      console.log("Error object:", error);
+      return true; // Prevent the error from showing in the browser console
+    };
+    
+    // Trying Trackjs
+    // TrackJS.track('Testing TrackJS!');
+
   </script>
+
+  
 </body>
 
 </html>
